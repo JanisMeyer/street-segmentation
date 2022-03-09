@@ -1,0 +1,59 @@
+{
+    "params": {
+
+    },
+    "train": {
+
+    },
+    "data": {
+        "height": 160,
+        "width": 256,
+        "preprocess": ["Resize"],
+        "labeled": [
+            {
+                "root": "data/audi",
+                "transforms": ["TransformMask", "ToTensor"]
+            }
+        ],
+        "labels": [
+            {"id": 0, "label": "Car", "color": [255, 0, 0]},
+            {"id": 1, "label": "Bicycle", "color": [182, 89, 6]},
+            {"id": 2, "label": "Pedestrian", "color": [204, 153, 255]},
+            {"id": 3, "label": "Truck", "color": [255, 128, 0]},
+            {"id": 4, "label": "Small vehicles", "color": [0, 255, 0]},
+            {"id": 5, "label": "Traffic signal", "color": [0, 128, 255]},
+            {"id": 6, "label": "Traffic sign", "color": [0, 255, 255]},
+            {"id": 7, "label": "Utility vehicle", "color": [255, 255, 0]},
+            {"id": 8, "label": "Sidebars", "color": [233, 100, 0]},
+            {"id": 9, "label": "Speed bumper", "color": [110, 110, 0]},
+            {"id": 10, "label": "Curbstone", "color": [128, 128, 0]},
+            {"id": 11, "label": "Solid line", "color": [255, 193, 37]},
+            {"id": 12, "label": "Irrelevant signs", "color": [64, 0, 64]},
+            {"id": 13, "label": "Road blocks", "color": [185, 122, 87]},
+            {"id": 14, "label": "Tractor", "color": [0, 0, 100]},
+            {"id": 15, "label": "Non-drivable street", "color": [139, 99, 108]},
+            {"id": 16, "label": "Zebra crossing", "color": [210, 50, 115]},
+            {"id": 17, "label": "Obstacles / trash", "color": [255, 0, 128]},
+            {"id": 18, "label": "Poles", "color": [255, 246, 143]},
+            {"id": 19, "label": "RD restricted area", "color": [150, 0, 150]},
+            {"id": 20, "label": "Animals", "color": [204, 255, 153]},
+            {"id": 21, "label": "Grid structure", "color": [238, 162, 173]},
+            {"id": 22, "label": "Signal corpus", "color": [33, 44, 177]},
+            {"id": 23, "label": "Drivable cobblestone", "color": [180, 50, 180]},
+            {"id": 24, "label": "Electronic traffic", "color": [255, 70, 185]},
+            {"id": 25, "label": "Slow drive area", "color": [238, 233, 191]},
+            {"id": 26, "label": "Nature object", "color": [147, 253, 194]},
+            {"id": 27, "label": "Parking area", "color": [150, 150, 200]},
+            {"id": 28, "label": "Sidewalk", "color": [180, 150, 200]},
+            {"id": 29, "label": "Ego car", "color": [72, 209, 204]},
+            {"id": 30, "label": "Painted driv. instr.", "color": [200, 125, 210]},
+            {"id": 31, "label": "Traffic guide obj.", "color": [159, 121, 238]},
+            {"id": 32, "label": "Dashed line", "color": [128, 0, 255]},
+            {"id": 33, "label": "RD normal street", "color": [255, 0, 255]},
+            {"id": 34, "label": "Sky", "color": [135, 206, 255]},
+            {"id": 35, "label": "Buildings", "color": [241, 230, 255]},
+            {"id": 36, "label": "Blurred area", "color": [96, 69, 143]},
+            {"id": 37, "label": "Rain dirt", "color": [53, 46, 82]}
+        ]
+    }
+}
