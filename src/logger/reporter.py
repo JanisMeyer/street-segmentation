@@ -18,6 +18,7 @@ class Reporter:
         self.key_for_best = key_for_best
         self.best_value = None
         self.best_step = 0
+        self.current_step = 0
 
     def add_addons(self, key, addons):
         if key not in self.addons:
@@ -32,6 +33,8 @@ class Reporter:
             self.metric_for_best.reset()
 
     def update(self, key, update_state):
+        if "step" in update_state:
+            self.current_step = update_state["step"]
         for addon in self.addons[key]:
             addon.update(update_state)
         if self.metric_for_best and key == self.key_for_best:
@@ -61,5 +64,5 @@ class Reporter:
         if self.metric_for_best and key == self.key_for_best:
             if self.best_value is None or self.metric_for_best.is_better(self.best_value):
                  self.best_value = self.metric_for_best.report()["score"]
-                 self.best_step = 
+                 self.best_step = self.current_step
         return report
