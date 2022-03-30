@@ -14,68 +14,158 @@ class Metric(Addon):
         self.num_updates += 1
 
     def report(self):
-        return {}
-
-    def is_better(self, value):
-        raise NotImplementedError
+        return {
+            "num_updates": self.num_updates
+        }
 
 class Loss(Metric):
     def __init__(self):
         super(Loss, self).__init__()
         self.loss = 0.0
-        self.losses = []
+        self.losses = {}
+
+    @property
+    def required_update_fields():
+        return ["loss"]
 
     def reset(self):
         super(Loss, self).reset()
         self.loss = 0.0
-        self.losses = []
+        self.losses = {}
 
     def update(self, update_state):
         super(Loss, self).update(update_state)
-        self.loss += update_state.get("loss", 0.0)
-        if not self.losses:
-            self.losses = [0] * len(update_state.get("losses", []))
-            for i, loss in enumerate(update_state.get("losses", [])):
-                self.losses[i] += loss
+        self.loss += update_state["loss"]
+        if "losses" in update_state:
+            for loss_name in update_state["losses"]:
+                if loss_name not in self.losses:
+                    self.losses[loss_name] = dict_get(update_state, "losses", loss_name)
+                else:
+                    self.losses[loss_name] += dict_get(update_state, "losses", loss_name)
 
     def report(self):
-        if len(self.losses) < 2:
-            repr = ""
+        if len(self.losses) > 1:
+            repr = "(%s)" % " + ".join(["%0.4f" % (self.losses[key] / self.num_updates) for key in self.losses])
         else:
-            repr = "(%s)" % " + ".join(["%0.4f" % (loss / self.num_updates) for loss in self.losses])
-            
+            repr = ""
+        loss = self.loss / self.num_updates
         return {
-            "score": self.loss / self.num_updates,
-            "repr": "Loss: %0.4f%s" % (self.loss / self.num_updates, repr)
+            "loss": loss,
+            "repr": "Loss: %0.4f%s" % (loss, repr)
         }
 
-    def is_better(self, value):
-        return (self.loss / self.num_updates) < value
-
 class Accuracy(Metric):
-    def __init__(self):
+    def __init__(self, num_classes):
         super(Accuracy, self).__init__()
-        self.num_correct = 0
-        self.num_pixels = 0
+        self.num_classes = num_classes
+
+        self.num_correct = torch.zeros(self.num_classes)
+        self.num_pixels = torch.zeros(self.num_classes)
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(len(dict_get(config, "data", "labels", default=[])))
+
+    @property
+    def required_update_fields():
+        return ["intersection", "num_relevant"]
 
     def reset(self):
         super(Accuracy, self).reset()
-        self.num_correct = 0
-        self.num_pixels = 0
+        self.num_correct = torch.zeros(self.num_classes)
+        self.num_pixels = torch.zeros(self.num_classes)
 
     def update(self, update_state):
         super(Accuracy, self).update(update_state)
-        self.num_correct += torch.sum(update_state.get("intersection"))
-        self.num_pixels += torch.numel(update_state.get("targets"))
+        self.num_correct += update_state["intersection"]
+        self.num_pixels += update_state["num_relevant"]
+
+    def report(self):
+        per_class_score = self.num_correct / self.num_pixels
+        accuracy = torch.sum(self.num_correct) / torch.sum(self.num_pixels)
+        return {
+            "accuracy": accuracy,
+            "per_class_score": per_class_score,
+            "repr": "Accuracy: %0.4f" % accuracy
+        }
+
+class Predicted(Metric):
+    def __init__(self, num_classes):
+        self.num_classes = num_classes
+        self.num_predicted = torch.zeros(self.num_classes, dtype=torch.int)
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(len(dict_get(config, "data", "labels", default=[])))
+
+    @property
+    def required_update_fields():
+        return ["num_predicted"]
+
+    def reset(self):
+        self.num_predicted = torch.zeros(self.num_classes, dtype=torch.int)
+
+    def update(self, update_state):
+        self.num_predicted += update_state["num_predicted"]
 
     def report(self):
         return {
-            "score": self.num_correct / self.num_pixels,
-            "repr": "Accuracy: %0.4f" % self.num_correct / self.num_pixels
+            "num_predicted": torch.sum(self.num_predicted),
+            "per_class_score": self.num_predicted,
+            "repr": "Predicted: %d" % torch.sum(self.num_predicted)
         }
 
-    def is_better(self, value):
-        return (self.num_correct / self.num_pixels) > value
+class Relevant(Metric):
+    def __init__(self, num_classes):
+        self.num_classes = num_classes
+        self.num_relevant = torch.zeros(self.num_classes, dtype=torch.int)
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(len(dict_get(config, "data", "labels", default=[])))
+
+    @property
+    def required_update_fields():
+        return ["num_relevant"]
+
+    def reset(self):
+        self.num_relevant = torch.zeros(self.num_classes, dtype=torch.int)
+
+    def update(self, update_state):
+        self.num_relevant += update_state["num_relevant"]
+
+    def report(self):
+        return {
+            "num_relevant": torch.sum(self.num_relevant),
+            "per_class_score": self.num_relevant,
+            "repr": "Relevant: %d" % torch.sum(self.num_relevant)
+        }
+
+class Correct(Metric):
+    def __init__(self, num_classes):
+        self.num_classes = num_classes
+        self.num_correct = torch.zeros(self.num_classes, dtype=torch.int)
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(len(dict_get(config, "data", "labels", default=[])))
+
+    @property
+    def required_update_fields():
+        return ["num_correct"]
+
+    def reset(self):
+        self.num_correct = torch.zeros(self.num_classes, dtype=torch.int)
+
+    def update(self, update_state):
+        self.num_correct += update_state["num_correct"]
+
+    def report(self):
+        return {
+            "num_correct": torch.sum(self.num_correct),
+            "per_class_score": self.num_correct,
+            "repr": "Correct: %d" % torch.sum(self.num_correct)
+        }
 
 class Score(Metric):
     def __init__(self, num_classes, weight_classes=False, smooth=1e-6):
@@ -83,6 +173,7 @@ class Score(Metric):
         self.num_classes = num_classes
         self.weight_classes = weight_classes
         self.smooth = smooth
+
         self.numer = torch.zeros(self.num_classes)
         self.denom = torch.zeros(self.num_classes)
         self.updates_per_class = torch.zeros(self.num_classes)
@@ -95,6 +186,10 @@ class Score(Metric):
             dict_get(config, "params", "metrics_weight_classes", default=False),
             dict_get(config, "params", "smooth", default=1e-6)
         )
+    
+    @property
+    def required_update_fields():
+        return ["num_relevant", "num_predicted"]
 
     def reset(self):
         super(Score, self).reset()
@@ -132,24 +227,37 @@ class Score(Metric):
             "repr": "%s: %0.4f" % (type(self).__name__, score)
         }
 
-    def is_better(self, value):
-        return self.calculate_score()[0] > value
-
 class IoU(Score):
+    @property
+    def required_update_fields():
+        return ["num_relevant", "num_predicted", "intersection"]
+    
     def get_values(self, update_state):
         intersection = update_state.get("intersection")
         union = update_state.get("num_relevant") + update_state.get("num_predicted") - intersection
         return intersection, union
 
 class Precision(Score):
+    @property
+    def required_update_fields():
+        return ["num_relevant", "num_predicted", "intersection"]
+    
     def get_values(self, update_state):
         return update_state.get("intersection"), update_state.get("num_predicted")
 
 class Recall(Score):
+    @property
+    def required_update_fields():
+        return ["num_relevant", "num_predicted", "intersection"]
+    
     def get_values(self, update_state):
         return update_state.get("intersection"), update_state.get("num_relevant")
 
 class Dice(Score):
+    @property
+    def required_update_fields():
+        return ["num_relevant", "num_predicted", "intersection"]
+    
     def get_values(self, update_state):
         intersection = update_state.get("intersection")
         denom = update_state.get("num_predicted") + update_state.get("num_relevant")

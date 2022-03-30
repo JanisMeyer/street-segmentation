@@ -40,20 +40,25 @@ class Reporter:
         if self.metric_for_best and key == self.key_for_best:
             self.metric_for_best.update(update_state)
 
-    def report(self, key, log_results=True, log_class_results=False):
+    def report(self, *keys, log_results=True, log_class_results=False):
         report = {}
-        for addon in self.addons[key]:
-            name = type(addon).__name__
-            report[name] = addon.report()
-            if "score" in report[name]:
-                if name not in self.histograms:
-                    self.histograms[name] = {key: []}
-                if key not in self.histograms[name]:
-                    self.histograms = dict_set(self.histograms, [], name, key)
-                self.histograms[name][key].append(dict_get(report, name, "score"))
+        for key in keys:
+            report[key] = {}
+            for addon in self.addons[key]:
+                name = type(addon).__name__
+                report[key][name] = addon.report()
+                if "score" in report[key][name]:
+                    if name not in self.histograms:
+                        self.histograms[name] = {key: []}
+                    if key not in self.histograms[name]:
+                        self.histograms = dict_set(self.histograms, [], name, key)
+                    self.histograms[name][key].append(dict_get(report, key, name, "score"))
         
         if log_results:
-            log_info(";".join([dict_get(report, key, "repr", default="") for key in report if dict_get(report, key, "repr", default="")]))
+            repr = [
+                dict_get(report, key, name, "repr", default="") for name in report[key] for key in report
+            ]
+            log_info(";".join([_repr for _repr in repr if _repr]))
         
         if log_class_results and self.id_to_label is not None:
             per_class_scores = {

@@ -6,7 +6,11 @@ class Addon:
     @classmethod
     def from_config(cls, config):
         return cls()
-    
+
+    @property
+    def required_update_fields():
+        return []
+
     def reset(self):
         pass
 
@@ -16,85 +20,129 @@ class Addon:
     def report(self):
         return {}
 
+    def load_state_dict(self, state_dict):
+        return
+
+    def state_dict(self):
+        return {}
+
 class Training(Addon):
     def __init__(self):
-        self.start_time = None
-        self.step = 0
+        self.timer = None
+        self.current_step = 0
+        self.base_time = 0
 
     def reset(self):
-        self.start_time = time()
+        self.timer = time()
 
     def update(self, update_state):
-        self.step = update_state["step"]
+        self.current_step += update_state["num_steps"]
 
     def report(self):
+        elapsed = time() - self.timer + self.base_time
         return {
-            "repr": "Finished training after %d steps and %0.2fs" % (self.step, time() - self.start_time)
+            "current_step": self.current_step,
+            "elapsed": elapsed,
+            "repr": "Finished training after %d steps and %0.2fs" % (self.current_step, elapsed)
+        }
+
+    def load_state_dict(self, state_dict):
+        if "current_step" in state_dict:
+            self.current_step = state_dict["current_step"]
+        if "base_time" in state_dict:
+            self.base_time = state_dict["base_time"]
+
+    def state_dict(self):
+        return {
+            "current_step": self.current_step,
+            "base_time": time() - self.timer + self.base_time
         }
 
 class TrainingProgress(Addon):
     def __init__(self, max_steps):
         self.max_steps = max_steps
-        self.step = 0
+        self.current_step = 0
 
     @classmethod
     def from_config(cls, config):
         return cls(dict_get(config, "train", "max_steps", default=0))
 
     def reset(self):
-        self.step = 0
+        self.current_step = 0
 
     def update(self, update_state):
-        self.step += 1
+        self.current_step += 1
 
     def report(self):
         return {
-            "repr": "Step %{0}d/%d".format(len(str(self.max_steps))) % (self.step, self.max_steps)
+            "current_step": self.current_step,
+            "repr": "Step %{0}d/%d".format(len(str(self.max_steps))) % (self.current_step, self.max_steps)
         }
+
+    def load_state_dict(self, state_dict):
+        if "current_step" in state_dict:
+            self.max_steps += state_dict["current_step"]
+            self.current_step = state_dict["current_step"]
 
 class Evaluation(Addon):
     def __init__(self):
-        self.start_time = None
+        self.timer = None
         self.num_samples = 0
+
+    @property
+    def required_update_fields():
+        return ["num_samples"]
 
     def reset(self):
         self.num_samples = 0
-        self.start_time = time()
+        self.timer = time()
 
     def update(self, update_state):
-        self.num_samples += update_state["targets"].size(0)
+        self.num_samples += update_state["num_samples"]
 
     def report(self):
+        elapsed = time() - self.timer
         return {
-            "repr": "Finished evaluation on %d samples in %0.2fs" % (self.num_samples, time() - self.start_time)
+            "num_samples": self.num_samples,
+            "elapsed": elapsed,
+            "repr": "Finished evaluation on %d samples in %0.2fs" % (self.num_samples, elapsed)
         }
 
 class Inference(Addon):
     def __init__(self):
-        self.start_time = None
+        self.timer = None
         self.num_samples = 0
+
+    @property
+    def required_update_fields():
+        return ["num_samples"]
 
     def reset(self):
         self.num_samples = 0
-        self.start_time = time()
+        self.timer = time()
 
     def update(self, update_state):
-        self.num_samples += update_state["predictions"].size(0)
+        self.num_samples += update_state["num_samples"]
 
     def report(self):
+        elapsed = time() - self.timer
         return {
-            "repr": "Performed inference on %d samples in %0.2fs" % (self.num_samples, time() - self.start_time)
+            "num_samples": self.num_samples,
+            "elapsed": elapsed,
+            "repr": "Performed inference on %d samples in %0.2fs" % (self.num_samples, elapsed)
         }
 
 class Timer(Addon):
     def __init__(self):
-        self.start_time = None
+        self.timer = None
 
     def reset(self):
-        self.start_time = time()
+        self.timer = time()
 
     def report(self):
+        elapsed = time() - self.start_time
         return {
-            "repr": "Elapsed: %0.2f" % (time() - self.start_time)
+            "elapsed": elapsed,
+            "repr": "Elapsed: %0.2f" % elapsed
         }
     
