@@ -10,6 +10,12 @@ def init_logger():
     logger = Logger()
     logger.log_info("Initialized logger...")
 
+def add_log_file(file_name):
+    global logger
+    if not logger:
+        init_logger()
+    logger.add_log_file(file_name)
+
 def log_info(message, *args):
     global logger
     if not logger:
@@ -32,6 +38,12 @@ class Logger:
         logging.getLogger().addHandler(stdout_handler)
 
         logging.getLogger().setLevel(getattr(logging, 'INFO'))
+
+    def add_log_file(self, file_name):
+        file_handler = logging.FileHandler(filename=file_name)
+        file_handler.setLevel(getattr(logging, 'INFO'))
+        file_handler.setFormatter(logging.Formatter(fmt="%(asctime)s: %(message)s", datefmt="%H:%M:%S"))
+        logging.getLogger().addHandler(file_handler)
 
     def log_info(self, message, *args):
         logging.getLogger().info(message, *args)

@@ -8,6 +8,9 @@ from .logger import log_info, log_per_class
 from ..utils import dict_get, dict_set
 
 class Reporter:
+    """ Reporter for logging and reporting on training progress / evaluation / inference etc.
+        Uses a collection of addons for dynamic configuration of metrics/checkpoint writing/progress reports.
+    """
     def __init__(self, id_to_label=None, metric_for_best=None, key_for_best="eval"):
         self.id_to_label = id_to_label
 

@@ -14,6 +14,8 @@ class Transform:
     pass
 
 class Load(Transform):
+    """ Loads the image and label, based on the paths contained in the sample.
+    """
     def __call__(self, sample):
         if "image_path" in sample:
             sample["image"] = load_image(sample["image_path"])
@@ -30,6 +32,8 @@ class ToTensor(Transform):
         return sample
 
 class TransformMask(Transform):
+    """ Transforms a mask from its RGB-Image to a tensor of indices.
+    """
     def __init__(self, data_config):
         self.color_map = get_color_map(data_config)
 

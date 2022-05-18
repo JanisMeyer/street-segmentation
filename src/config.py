@@ -5,6 +5,8 @@ from .data.transforms import TRANSFORMS
 from .logger import log_info
 
 def load_config(path):
+    """ Loads and verifies the json-config at the given path.
+    """
     if not os.path.exists(path):
         log_info("Config file at %s could not be found.", path)
         return None 

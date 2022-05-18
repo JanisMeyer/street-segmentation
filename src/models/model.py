@@ -11,6 +11,8 @@ ARCHITECTURES = {
 }
 
 class Model(torch.nn.Module):
+    """ A encoder-decoder model for semantic segmentation.
+    """
     def __init__(self, encoder, decoder):
         super(Model, self).__init__()
         self.encoder = encoder

@@ -16,6 +16,8 @@ def from_config(dataset_configs, index_file, data_config=None, unlabeled=False):
         return MultiDataset(*datasets)
 
 class Dataset(torch.utils.data.Dataset):
+    """ A dataset with a single datasource.
+    """
     def __init__(self, root_folder, data, transforms=None, unlabeled=False):
         self.root_folder = root_folder
         self.data = data
@@ -48,6 +50,8 @@ class Dataset(torch.utils.data.Dataset):
         return sample
 
 class MultiDataset(torch.utils.data.Dataset):
+    """ A dataset with data from multiple sources.
+    """
     def __init__(self, *datasets):
         self.datasets = datasets
         self.lengths = [len(dataset) for dataset in self.datasets]
@@ -63,6 +67,8 @@ class MultiDataset(torch.utils.data.Dataset):
         return self.datasets[dataset_idx][idx]
 
 def calculate_statistics(data_loader, data_config, log_results=False, save_path=None):
+    """ Calculate and, optionally, store dataset statistics.
+    """
     num_classes = len(data_config["labels"])
     id_to_label = get_id_to_label(data_config)
     

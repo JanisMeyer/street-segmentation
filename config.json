@@ -1,9 +1,29 @@
 {
     "params": {
-
+        "model_path": "model.pt"
+    },
+    "model": {
+        
     },
     "train": {
-
+        "index_file": "train.txt",
+        "batch_size": 20,
+        "max_steps": 5000,
+        "report_steps": 500,
+        "learning_rate": 0.001,
+        "weight_decay": 0.0
+    },
+    "eval": {
+        "index_file": "eval.txt",
+        "batch_size": 20
+    },
+    "test": {
+        "index_file": "test.txt",
+        "batch_size": 20
+    },
+    "infer": {
+        "index_file": "infer.txt",
+        "batch_size": 20
     },
     "data": {
         "height": 160,
@@ -55,5 +75,9 @@
             {"id": 36, "label": "Blurred area", "color": [96, 69, 143]},
             {"id": 37, "label": "Rain dirt", "color": [53, 46, 82]}
         ]
+    },
+    "logging": {
+        "output_folder": "logs",
+        "file_name": "log.txt"
     }
 }
