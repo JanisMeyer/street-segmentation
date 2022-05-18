@@ -1,6 +1,5 @@
-# Framework for the Semantic Segmentation (of street images)
-
-(Incomplete) Framework for the training, evaluation and inference of semantic segmentation models using PyTorch.
+# Framework for the Semantic Segmentation
+(Incomplete) Framework for the training, evaluation and inference of semantic segmentation models (of street images) using PyTorch.
 
 Most of the functionality is exposed through `run.py`. Usage:
 
